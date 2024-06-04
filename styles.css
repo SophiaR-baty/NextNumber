@@ -9,19 +9,25 @@ body {
     align-items: center;
 }
 
-h1 {
-    font-size: 2.5em;
-    color: #4a90e2;
-    margin-bottom: 20px;
-}
-
-form {
+.card {
     background: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 500px;
+    width: 40em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+
+#plot {
+    height: 70vh;
+    display: inline-block;
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #4a90e2;
     margin-bottom: 20px;
 }
 
@@ -32,7 +38,8 @@ label {
 }
 
 input[type="text"] {
-    width: calc(100% - 20px);
+    width: 20em;
+    min-width: 50px;
     padding: 10px;
     font-size: 1em;
     margin-bottom: 20px;
@@ -55,24 +62,3 @@ button:hover {
     background-color: #357ab8;
 }
 
-#predictionResult, #plot {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    display: inline-block;
-    text-align: center;
-}
-
-#plot {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    margin-bottom: 20px;
-    height: 50vh;
-    max-width: 700px;
-    display: inline-block;
-}

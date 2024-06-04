@@ -1,12 +1,9 @@
 const reroll_attempts = 3;
 const MAX_NUMBERS = 6;
 
-window.MathJax = {
-    tex: {
-        inlineMath: [['$', '$']],
-        displayMath: [['$$', '$$']]
-    }
-};
+window.addEventListener('error', (event) => {
+    console.error('MathJax error:', event.error);
+});
 
 
 const functionss = [
@@ -174,7 +171,7 @@ function handleSubmit(event) {
     // Generate the prediction function in LaTeX
     let predictionLatex = "f(x) = ";
     selectedFunctions.forEach((func, index) => {
-        predictionLatex += `${coefficients[index].toFixed(6)} \\cdot ${formatLatex(func)} + `;
+        predictionLatex += `${coefficients[index].toFixed(2)} \\cdot ${formatLatex(func)} + `;
     });
     predictionLatex = predictionLatex.slice(0, -3); // Remove the extra " + " at the end
 
@@ -185,14 +182,15 @@ function handleSubmit(event) {
     predictionResult.innerHTML = '';
 
     var paragraph1 = document.createElement('p');
-    paragraph1.innerHTML = "Predicted Function: <br>$" + predictionLatex + "$";
+    paragraph1.innerHTML = "Predicted Function: <br><br>$" + predictionLatex + "$";
     predictionResult.appendChild(paragraph1);
     
     var paragraph2 = document.createElement('p');
-    paragraph2.innerHTML = "Predicted next value: $" + nextValue + "$";
+    paragraph2.innerHTML = "Predicted next value: <br><br>$" + nextValue + "$";
     predictionResult.appendChild(paragraph2);
 
-    MathJax.typeset()
+    MathJax.typesetPromise()
+
     var minVal = Math.min.apply(null, numbersInput);
     minVal = Math.min(0, nextValue, minVal) - 3;
     var maxVal = Math.max.apply(null, numbersInput);
@@ -209,7 +207,7 @@ document.getElementById('inputForm').addEventListener('submit', function(event) 
 function formatLatex(func) {
     var latex_str = func.latex;
     func.param.forEach((p) => {
-        latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"]));
+        latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"].toFixed(2)));
     });
 
     return latex_str;
@@ -243,6 +241,7 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         expressions: false,
         settingsMenu: false,
         // lockViewport: true,
+        pointsOfInterest: false,
         zoomButtons: true,
     }
     calculator = Desmos.GraphingCalculator(destination, options);
@@ -250,6 +249,7 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
     // add function
     const f = {
         latex: latex_str,
+        color: Desmos.Colors.BLUE
     };
     calculator.setExpression(f);
 
@@ -263,6 +263,7 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         latex: p_latex,
         showLabel: true,
         style: Desmos.Styles.CROSS,
+        color: Desmos.Colors.RED
     };
     calculator.setExpression(points);
     
