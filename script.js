@@ -5,6 +5,16 @@ window.addEventListener('error', (event) => {
     console.error('MathJax error:', event.error);
 });
 
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const values = urlParams.get('values');
+
+    if (values) {
+        document.getElementById('numbers').value = values;
+        // document.getElementById('inputForm').submit();
+    }
+});
+
 
 const functionss = [
     {
@@ -171,9 +181,16 @@ function handleSubmit(event) {
     // Generate the prediction function in LaTeX
     let predictionLatex = "f(x) = ";
     selectedFunctions.forEach((func, index) => {
-        predictionLatex += `${coefficients[index].toFixed(2)} \\cdot ${formatLatex(func)} + `;
+        predictionLatex += `${coefficients[index]} \\cdot ${formatLatex(func)} + `;
     });
     predictionLatex = predictionLatex.slice(0, -3); // Remove the extra " + " at the end
+    predictionLatex = convertScientificToLatex(predictionLatex);
+
+    let predictionLatex_short = "f(x) = ";
+    selectedFunctions.forEach((func, index) => {
+        predictionLatex_short += `${coefficients[index].toFixed(2)} \\cdot ${formatLatexShort(func)} + `;
+    });
+    predictionLatex_short = predictionLatex_short.slice(0, -3); // Remove the extra " + " at the end
 
     // Calculate the next value using the predicted function
     const nextValue = math.multiply(coefficients, selectedFunctions.map(func => func.func(numbersInput.length + 1, func.param)));
@@ -182,7 +199,7 @@ function handleSubmit(event) {
     predictionResult.innerHTML = '';
 
     var paragraph1 = document.createElement('p');
-    paragraph1.innerHTML = "Predicted Function: <br><br>$" + predictionLatex + "$";
+    paragraph1.innerHTML = "Predicted Function: <br><br>$" + predictionLatex_short + "$";
     predictionResult.appendChild(paragraph1);
     
     var paragraph2 = document.createElement('p');
@@ -207,10 +224,25 @@ document.getElementById('inputForm').addEventListener('submit', function(event) 
 function formatLatex(func) {
     var latex_str = func.latex;
     func.param.forEach((p) => {
+        latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"]));
+    });
+
+    return latex_str;
+}
+
+function formatLatexShort(func) {
+    var latex_str = func.latex;
+    func.param.forEach((p) => {
         latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"].toFixed(2)));
     });
 
     return latex_str;
+}
+
+function convertScientificToLatex(scientificStr) {
+    const pattern = /([-+]?\d*\.?\d+)[eE]([-+]?\d+)/g;
+    const replacement = '$1\\cdot 10^{$2}';
+    return scientificStr.replace(pattern, replacement);
 }
 
 function factorial(n) {
@@ -243,7 +275,8 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         // lockViewport: true,
         pointsOfInterest: false,
         zoomButtons: true,
-        trace: false
+        trace: false,
+        authorFeatures: true
     }
     calculator = Desmos.GraphingCalculator(destination, options);
 
@@ -274,5 +307,5 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         right: num_points + 1,
         bottom: minVal,
         top: maxVal
-      });
+    });
 }
