@@ -243,6 +243,7 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         // lockViewport: true,
         pointsOfInterest: false,
         zoomButtons: true,
+        trace: false
     }
     calculator = Desmos.GraphingCalculator(destination, options);
 
