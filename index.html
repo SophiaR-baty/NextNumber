@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Algebra Predictor</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>What number comes next?</h1>
+
+    <form id="inputForm">
+        <label for="numbers">Enter numbers separated by space:</label><br>
+        <input type="text" id="numbers" name="numbers"><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="predictionResult"></div>
+
+    <div id="plot"></div>
+
+    <script src="script.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.0/math.min.js"></script>
+    <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+</body>
+</html>
