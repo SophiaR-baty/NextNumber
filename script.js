@@ -22,7 +22,7 @@ const FUNCTIONS = [
         evaluate: (x, param) => x ** param[0].value, 
         parameters: 
         [
-            { "name": "a", "min": -5, "max": 5, "exclude": [ 0, 1 ] }
+            { "name": "a", "type": "number", "min": 0, "max": 5, "exclude": [ 0, 1 ] }
         ]
     },
     {
@@ -37,7 +37,7 @@ const FUNCTIONS = [
         evaluate: (x, param) => Math.sin(param[0].value * x), 
         parameters: 
         [
-            { "name": "a", "min": -20, "max": 20, "exclude": [] }
+            { "name": "a", "type": "number", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
@@ -46,7 +46,7 @@ const FUNCTIONS = [
         evaluate: (x, param) => Math.cos(param[0].value * x), 
         parameters: 
         [
-            { "name": "a", "min": -20, "max": 20, "exclude": [] }
+            { "name": "a", "type": "number", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
@@ -55,7 +55,7 @@ const FUNCTIONS = [
         evaluate: (x, param) => Math.tan(param[0].value * x), 
         parameters: 
         [
-            { "name": "a", "min": -20, "max": 20, "exclude": [] }
+            { "name": "a", "type": "number", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
@@ -64,7 +64,7 @@ const FUNCTIONS = [
         evaluate: (x, param) => param[0].value ** x, 
         parameters:
         [
-            { "name": "a", "min": 0.1, "max": 5, "exclude": [ 0, 1 ] }
+            { "name": "a", "type": "number", "min": 0.1, "max": 5, "exclude": [ 0, 1 ] }
         ]
     },
     {
@@ -72,6 +72,22 @@ const FUNCTIONS = [
         latex: "x!",
         evaluate: (x, param) => factorial(x), 
         parameters: []
+    },
+    {
+        name: "reciprocal", 
+        latex: "\\frac{1}{${a}}",
+        evaluate: (x, param) => 1/param[0].value.func(x, param[0].value.param), 
+        parameters:
+        [
+            { "name": "a", "type": "function", "exclude": [ "constant", "reciprocal" ] }
+        ]
+    },
+    {
+        name: "natural_log",
+        latex: "\\ln(x)",
+        evaluate: (x, param) => Math.log(x), 
+        parameters: 
+        []
     }
 ];
 
@@ -101,21 +117,41 @@ function selectFunction(idx) {
     };
 
     for (let p_i = 0; p_i < f.parameters.length; p_i++) {
-        // get min and max values and excludes
-        let mini = f.parameters[p_i]["min"];
-        let maxi = f.parameters[p_i]["max"];
-        let excludes = f.parameters[p_i]["exclude"];
+        if (f.parameters[p_i]["type"] == "number") {
+            // get min and max values and excludes
+            let mini = f.parameters[p_i]["min"];
+            let maxi = f.parameters[p_i]["max"];
+            let excludes = f.parameters[p_i]["exclude"];
 
-        // get random value for parameter 
-        let p_value = mini + (maxi-mini) * Math.random();
+            // get random value for parameter 
+            let p_value = mini + (maxi-mini) * Math.random();
 
-        // reroll parameter if not valid
-        while (excludes.includes(p_value)) { 
-            p_value = mini + (maxi-mini) * Math.random();
+            // reroll parameter if not valid
+            while (excludes.includes(p_value)) { 
+                p_value = mini + (maxi-mini) * Math.random();
+            }
+            
+            // add parameter to parameterlist
+            func.param.push({ "name": f.parameters[p_i]["name"], "type": "number", "value": p_value});
+        }
+        else if (f.parameters[p_i]["type"] == "function") {
+            // get excludes
+            let excludes = f.parameters[p_i]["exclude"];
+
+            // roll function type by selecting random index
+            let randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
+
+            // reroll function if same function is already used
+            while (excludes.includes(FUNCTIONS[randomIndex]["name"])) {
+                randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
+            }
+
+            let i_func = selectFunction(randomIndex);
+            
+            // add parameter to parameterlist
+            func.param.push({ "name": f.parameters[p_i]["name"], "type": "function", "value": i_func});
         }
         
-        // add parameter to parameterlist
-        func.param.push({ "name": f.parameters[p_i]["name"], "value": p_value});
     }
 
     return func;
@@ -234,7 +270,13 @@ function handleSubmit(event) {
 function formatLatex(func) {
     var latex_str = func.latex;
     func.param.forEach((p) => {
-        latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"]));
+        if (p["type"] == "number") {
+            latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"]));
+        }
+        else if (p["type"] == "function") {
+            let p_latex_str = formatLatex(p["value"]);
+            latex_str = latex_str.replace("${" + p["name"] + "}", p_latex_str);
+        }
     });
 
     return latex_str;
@@ -243,7 +285,14 @@ function formatLatex(func) {
 function formatLatexShort(func) {
     var latex_str = func.latex;
     func.param.forEach((p) => {
-        latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"].toFixed(2)));
+        if (p["type"] == "number") {
+            latex_str = latex_str.replace("${" + p["name"] + "}", String(p["value"].toFixed(2)));
+        }
+        else if (p["type"] == "function") {
+            p_latex_str = formatLatexShort(p["value"]);
+            
+            latex_str = latex_str.replace("${" + p["name"] + "}", p_latex_str);
+        }
     });
 
     return latex_str;
