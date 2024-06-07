@@ -34,10 +34,19 @@ const div_resultContainer = document.getElementById('resultContainer');
 const div_graphContainer = document.getElementById('graphContainer');
 const input_numbersInputTextfield = document.getElementById('numbersInputTextfield');
 const button_submitButton = document.getElementById("submitButton");
+const input_seedInputTextfield = document.getElementById("seedInputTextfield");
+const accordionButtons = document.getElementsByClassName("accordion-button");
+for (let i = 0; i < accordionButtons.length; i++) {
+    accordionButtons[i].addEventListener("click", function() {
+        this.classList.toggle("active");
 
-
-
-
+        /* Toggle between hiding and showing the active panel */
+        var panel = this.nextElementSibling;
+        if (panel.style.maxHeight) { panel.style.maxHeight = null; } 
+        else { panel.style.maxHeight = "500px"; } 
+    });
+} 
+const input_useSeedCheckbox = document.getElementById("useSeedCheckbox");
 
 const FUNCTIONS = [
     // base and utility functions
@@ -212,6 +221,17 @@ window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const values = urlParams.get('numbers');
 
+    const seed = urlParams.get("seed");
+    if (seed) {
+        input_seedInputTextfield.value = seed;
+        input_useSeedCheckbox.checked = true;
+    }
+    else {
+        input_seedInputTextfield.value = intToBase36(Date.now());
+        input_seedInputTextfield.value = seed;
+        input_useSeedCheckbox.checked = false;
+    }
+
     if (values) {
         console.log("numbers: " + String(values));
         input_numbersInputTextfield.value = values;
@@ -241,11 +261,11 @@ function selectFunction(idx, nest_level) {
             let excludes = f.parameters[p_i]["exclude"];
 
             // get random value for parameter 
-            let p_value = mini + (maxi-mini) * Math.random();
+            let p_value = mini + (maxi-mini) * random.rand();
 
             // reroll parameter if not valid
             while (excludes.includes(p_value)) { 
-                p_value = mini + (maxi-mini) * Math.random();
+                p_value = mini + (maxi-mini) * random.rand();
             }
             
             // add parameter to parameterlist
@@ -257,7 +277,7 @@ function selectFunction(idx, nest_level) {
             let allowed_func_idx = getLegalFunctionsIndex(excludes, nest_level);
 
             // roll function type by selecting random index
-            let randomIndex = allowed_func_idx[Math.floor(Math.random() * allowed_func_idx.length)];
+            let randomIndex = allowed_func_idx[Math.floor(random.rand() * allowed_func_idx.length)];
 
             let i_func = selectFunction(randomIndex, nest_level + 1);
             
@@ -312,11 +332,11 @@ function selectRandomFunctions(n) {
     let selectedIndices = [];
     for (let i = 0; i < n;) {
         // roll function type by selecting random index
-        let randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
+        let randomIndex = Math.floor(random.rand() * FUNCTIONS.length);
         // reroll function if same function is already used
         let attempt = 0;
         while (selectedIndices.includes(randomIndex) && attempt < REROLL_ATTEMPTS) {
-            randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
+            randomIndex = Math.floor(random.rand() * FUNCTIONS.length);
         }
         
         let func = selectFunction(randomIndex, 0);
@@ -331,6 +351,13 @@ function selectRandomFunctions(n) {
 }
 
 function handleSubmit(event) {
+    // set seed
+    if (!input_useSeedCheckbox.checked) {
+        const seed = intToBase36(Date.now());
+        input_seedInputTextfield.value = seed;
+    }
+    random.seed = base36ToInt(input_seedInputTextfield.value);
+    
     // prevents default behavior
     if (event) {
         event.preventDefault();
@@ -515,7 +542,7 @@ function graphFunction(destination, latex_str, minVal, maxVal, num_points=10) {
     // initiallize calculator
     const options = {
         keypad: false,
-        expressions: true,
+        expressions: false,
         settingsMenu: false,
         // lockViewport: true,
         pointsOfInterest: false,
@@ -607,4 +634,8 @@ function trimEndZeros(str) {
 
 function base36ToInt(base36) {
     return parseInt(base36, 36);
+}
+
+function intToBase36(int) {
+    return int.toString(36).toUpperCase();
 }

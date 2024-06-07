@@ -11,7 +11,7 @@ body {
 
 .card {
     background: #fff;
-    padding: 20px;
+    padding: 10px 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 40em;
@@ -43,7 +43,6 @@ input[type="text"] {
     min-width: 50px;
     padding: 10px;
     font-size: 1em;
-    margin-bottom: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
@@ -63,3 +62,71 @@ button:hover {
     background-color: #357ab8;
 }
 
+#numbersInputContainer {
+    margin: 10px 10px 30px 10px;
+}
+
+
+
+/* Style the buttons that are used to open and close the accordion panel */
+#advanced-settings-toggle {
+    background-color: #fff;
+    color: #999;
+    user-select: none;      /* Standard property */
+    -webkit-user-select: none; /* Chrome, Safari, Opera */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* Internet Explorer/Edge */
+    cursor: default;        /* Default mouse icon */
+    padding: 0px;
+    text-align: center;
+    border: none;
+    outline: none;
+    transition: 0.2s;
+}
+
+#advanced-settings-container {
+    margin: 10px 10px 30px 10px;
+    min-height: 1em;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+#advanced-settings-toggle.active, #advanced-settings-toggle.accordion-button:hover {
+    color: #555;
+}
+
+/* Style the accordion panel. Note: hidden by default */
+.accordion-content {
+    margin: 20px 0px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+    
+    display: flex;
+    
+    justify-content: center; /* Center the content horizontally */
+    align-items: center;
+}
+
+.accordion-content label {
+    margin: 0px 10px 0px 10px;
+}
+
+
+.accordion-content input[type="checkbox"] {
+    width: 2em;
+    height: 2em;
+    border: 2px solid #999;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.accordion-content input[type="text"] {
+    width: 10em;
+    min-width: 50px;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}

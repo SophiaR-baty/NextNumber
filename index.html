@@ -31,8 +31,22 @@
     <h1>What number comes next?</h1>
 
     <div class="card" id="inputForm">
-        <label for="numbers">Enter numbers separated by space:</label>
-        <input type="text" id="numbersInputTextfield" name="numbers">
+        <div id="numbersInputContainer">
+            <label>Enter numbers separated by space:</label>
+            <input type="text" id="numbersInputTextfield">
+        </div>
+
+        <div id="advanced-settings-container">
+            <div class="accordion-button" id="advanced-settings-toggle">▼ advanced Settings</div>
+            <div class="accordion-content" id="advanced-settings-content">
+
+                <label for="seedInput">Seed:</label>
+                <input type="text" id="seedInputTextfield" name="seedInput">
+                <label for="useSeed">Use Seed:</label>
+                <input type="checkbox" id="useSeedCheckbox" name="useSeed">
+            </div>
+        </div>
+
         <button id="submitButton" type="submit">Predict</button>
     </div>
 
