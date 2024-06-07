@@ -1,158 +1,189 @@
-const reroll_attempts = 3;
+// constants
+const REROLL_ATTEMPTS = 3;
 const MAX_NUMBERS = 6;
 
-window.addEventListener('error', (event) => {
-    console.error('MathJax error:', event.error);
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const values = urlParams.get('values');
-
-    if (values) {
-        document.getElementById('numbers').value = values;
-        // document.getElementById('inputForm').submit();
-    }
-});
+// html elements
+const div_resultContainer = document.getElementById('resultContainer');
+const div_graphContainer = document.getElementById('graphContainer');
+const input_numbersInputTextfield = document.getElementById('numbersInputTextfield');
+const button_submitButton = document.getElementById("submitButton");
 
 
-const functionss = [
+const FUNCTIONS = [
     {
-        "name": "linear",
-        "latex": "x",
-        "parameters": []
+        name: "linear",
+        latex: "x",
+        evaluate: (x, param) => x,
+        parameters: []
     },
     {
-        "name": "polynomial",
-        "latex": "x^{${a}}",
-        "parameters": 
+        name: "polynomial",
+        latex: "x^{${a}}",
+        evaluate: (x, param) => x ** param[0].value, 
+        parameters: 
         [
             { "name": "a", "min": -5, "max": 5, "exclude": [ 0, 1 ] }
         ]
     },
     {
-        "name": "constant",
-        "latex": "1",
-        "parameters": []
+        name: "constant",
+        latex: "1",
+        evaluate: (x, param) => 1, 
+        parameters: []
     },
     {
-        "name": "sine",
-        "latex": "\\sin(${a}\\cdot x)",
-        "parameters": 
+        name: "sine",
+        latex: "\\sin(${a}\\cdot x)",
+        evaluate: (x, param) => Math.sin(param[0].value * x), 
+        parameters: 
         [
             { "name": "a", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
-        "name": "cosine",
-        "latex": "\\cos(${a}\\cdot x)",
-        "parameters": 
+        name: "cosine",
+        latex: "\\cos(${a}\\cdot x)",
+        evaluate: (x, param) => Math.cos(param[0].value * x), 
+        parameters: 
         [
             { "name": "a", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
-        "name": "tangent",
-        "latex": "\\tan(${a}\\cdot x)",
-        "parameters": 
+        name: "tangent",
+        latex: "\\tan(${a}\\cdot x)",
+        evaluate: (x, param) => Math.tan(param[0].value * x), 
+        parameters: 
         [
             { "name": "a", "min": -20, "max": 20, "exclude": [] }
         ]
     },
     {
-        "name": "exponential", 
-        "latex": "${a}^{x}",
-        "parameters":
+        name: "exponential", 
+        latex: "${a}^{x}",
+        evaluate: (x, param) => param[0].value ** x, 
+        parameters:
         [
             { "name": "a", "min": 0.1, "max": 5, "exclude": [ 0, 1 ] }
         ]
     },
     {
-        "name": "factorial",
-        "latex": "x!",
-        "parameters": []
+        name: "factorial",
+        latex: "x!",
+        evaluate: (x, param) => factorial(x), 
+        parameters: []
     }
 ];
 
-const functionDict = {
-    "linear": (x, param) => x, 
-    "polynomial": (x, param) => x ** param[0].value, 
-    "constant": (x, param) => 1, 
-    "sine": (x, param) => Math.sin(param[0].value * x), 
-    "cosine": (x, param) => Math.cos(param[0].value * x), 
-    "tangent": (x, param) => Math.tan(param[0].value * x), 
-    "exponential": (x, param) => param[0].value ** x, 
-    "factorial": (x, param) => factorial(x), 
+window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const values = urlParams.get('numbers');
+
+    if (values) {
+        console.log("numbers: " + String(values));
+        input_numbersInputTextfield.value = values;
+        handleSubmit(null);
+    }
+});
+
+button_submitButton.onclick = function(event) {
+    handleSubmit(event);
 };
+
+function selectFunction(idx) {
+    // set f to be the function object
+    let f = FUNCTIONS[idx];
+            
+    let func = {
+        func: f.evaluate, 
+        param: [],
+        latex: f.latex
+    };
+
+    for (let p_i = 0; p_i < f.parameters.length; p_i++) {
+        // get min and max values and excludes
+        let mini = f.parameters[p_i]["min"];
+        let maxi = f.parameters[p_i]["max"];
+        let excludes = f.parameters[p_i]["exclude"];
+
+        // get random value for parameter 
+        let p_value = mini + (maxi-mini) * Math.random();
+
+        // reroll parameter if not valid
+        while (excludes.includes(p_value)) { 
+            p_value = mini + (maxi-mini) * Math.random();
+        }
+        
+        // add parameter to parameterlist
+        func.param.push({ "name": f.parameters[p_i]["name"], "value": p_value});
+    }
+
+    return func;
+}
+
+function calculateCoefficients(funcs, nums) {
+    let n = nums.length;
+    
+    // calculation step
+    // Create the n by n matrix A by applying selected functions to user numbers
+	let matrixA = [];
+    for (let i = 1; i <= n; i++) {
+        let row = [];
+        funcs.forEach((func) => {
+            row.push(func.func(i, func.param));
+        });
+        matrixA.push(row);
+    }
+    // Calculate the inverse of matrix A
+    let matrixAInverse = math.inv(matrixA);
+    // Create vector v from user numbers
+    let vectorV = nums.slice();
+    // Calculate the coefficients for selected functions
+    return math.multiply(matrixAInverse, vectorV);
+}
 
 function handleSubmit(event) {
     // prevents default behavior
-    event.preventDefault();
-
-    // define html elements
-    const predictionResult = document.getElementById('predictionResult');
-    const graphContainer = document.getElementById('plot');
+    if (event) {
+        event.preventDefault();
+    }
 
     // get numbers from input
-    const numbersInput = document.getElementById('numbers').value.trim().split(' ').map(Number);
+    const inputNumbers = input_numbersInputTextfield.value.trim().split(' ').map(Number);
 
     // check if all entered numbers are valid
-    if (numbersInput.some(isNaN)) {
-        predictionResult.textContent = "Please enter valid numbers separated by space.";
+    if (inputNumbers.some(isNaN)) {
+        div_resultContainer.textContent = "Please enter valid numbers separated by space.";
         return;
     }
 
     // check if at least numbers
-    if (numbersInput.length < 2) {
-        predictionResult.textContent = "Please enter at least two numbers for prediction.";
+    if (inputNumbers.length < 2) {
+        div_resultContainer.textContent = "Please enter at least two numbers for prediction.";
         return;
     }
 
     // check if max numbers is surpassed
-    if (numbersInput.length > MAX_NUMBERS) {
-        predictionResult.textContent = "Please enter no more than " + String(MAX_NUMBERS) + " numbers for prediction. ";
+    if (inputNumbers.length > MAX_NUMBERS) {
+        div_resultContainer.textContent = "Please enter no more than " + String(MAX_NUMBERS) + " numbers for prediction. ";
         return;
     } 
 
     // Select n random functions where n is the number of user numbers
-    const n = numbersInput.length;
+    const n = inputNumbers.length;
     
-    const selectedFunctions = [];
-    const selectedIndices = [];
-    for (var i = 0; i < n;) {
-        // roll function type
-        var randomIndex = Math.floor(Math.random() * functionss.length);
-        
+    let selectedFunctions = [];
+    let selectedIndices = [];
+    for (let i = 0; i < n;) {
+        // roll function type by selecting random index
+        let randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
         // reroll function if same function is already used
-        var attempt = 0;
-        while (selectedIndices.includes(randomIndex) && attempt < reroll_attempts) {
-            randomIndex = Math.floor(Math.random() * functionss.length);
+        let attempt = 0;
+        while (selectedIndices.includes(randomIndex) && attempt < REROLL_ATTEMPTS) {
+            randomIndex = Math.floor(Math.random() * FUNCTIONS.length);
         }
-
-        // set function type and roll parameters
-        var f = functionss[randomIndex];
         
-        var func = {
-            func: functionDict[f["name"]], 
-            param: [],
-            latex: f["latex"]
-        };
-        
-        for (var pi = 0; pi < f["parameters"].length; pi++) {
-            // get min and max values and excludes
-            var mini = f["parameters"][pi]["min"];
-            var maxi = f["parameters"][pi]["max"];
-            var excludes = f["parameters"][pi]["exclude"];
-
-            var p_value = mini + (maxi-mini) * Math.random();
-
-            // reroll parameter if not valid
-            while (excludes.includes(p_value)) { 
-                p_value = mini + (maxi-mini) * Math.random();
-            }
-            
-            func.param.push({ "name": f["parameters"][pi]["name"], "value": p_value});
-        }
+        let func = selectFunction(randomIndex);
 
         // push function and random index
         selectedFunctions.push(func);
@@ -162,64 +193,43 @@ function handleSubmit(event) {
     delete selectedIndices;
 
     // calculation step
-    // Create the n by n matrix A by applying selected functions to user numbers
-	const matrixA = [];
-    for (let i = 1; i <= n; i++) {
-        const row = [];
-        selectedFunctions.forEach((func) => {
-            row.push(func.func(i, func.param));
-        });
-        matrixA.push(row);
-    }
-    // Calculate the inverse of matrix A
-    const matrixAInverse = math.inv(matrixA);
-    // Create vector v from user numbers
-    const vectorV = numbersInput.slice();
-    // Calculate the coefficients for selected functions
-    const coefficients = math.multiply(matrixAInverse, vectorV);
+    const coefficients = calculateCoefficients(selectedFunctions, inputNumbers);
 
     // Generate the prediction function in LaTeX
-    let predictionLatex = "f(x) = ";
+    let desmosGraphFunction = "f(x) = ";
     selectedFunctions.forEach((func, index) => {
-        predictionLatex += `${coefficients[index]} \\cdot ${formatLatex(func)} + `;
+        desmosGraphFunction += `${coefficients[index]} \\cdot ${formatLatex(func)} + `;
     });
-    predictionLatex = predictionLatex.slice(0, -3); // Remove the extra " + " at the end
-    predictionLatex = convertScientificToLatex(predictionLatex);
+    desmosGraphFunction = desmosGraphFunction.slice(0, -3); // Remove the extra " + " at the end
+    desmosGraphFunction = convertScientificToLatex(desmosGraphFunction);
 
-    let predictionLatex_short = "f(x) = ";
-    selectedFunctions.forEach((func, index) => {
-        predictionLatex_short += `${coefficients[index].toFixed(2)} \\cdot ${formatLatexShort(func)} + `;
-    });
-    predictionLatex_short = predictionLatex_short.slice(0, -3); // Remove the extra " + " at the end
+    // displayed function
+    let displayedFunction = buildDisplayedFunction(selectedFunctions, coefficients);
 
     // Calculate the next value using the predicted function
-    const nextValue = math.multiply(coefficients, selectedFunctions.map(func => func.func(numbersInput.length + 1, func.param)));
+    let nextValue = calculate(selectedFunctions, coefficients, n + 1);
 
     // Display the prediction result
-    predictionResult.innerHTML = '';
+    div_resultContainer.innerHTML = '';
 
     var paragraph1 = document.createElement('p');
-    paragraph1.innerHTML = "Predicted Function: <br><br>$" + predictionLatex_short + "$";
-    predictionResult.appendChild(paragraph1);
+    paragraph1.innerHTML = "Predicted Function: <br><br>$" + displayedFunction + "$";
+    div_resultContainer.appendChild(paragraph1);
     
     var paragraph2 = document.createElement('p');
     paragraph2.innerHTML = "Predicted next value: <br><br>$" + nextValue + "$";
-    predictionResult.appendChild(paragraph2);
+    div_resultContainer.appendChild(paragraph2);
 
-    MathJax.typesetPromise()
+    // render the Latex
+    MathJax.typesetPromise();
 
-    var minVal = Math.min.apply(null, numbersInput);
+    // draw the graph
+    var minVal = Math.min.apply(null, inputNumbers);
     minVal = Math.min(0, nextValue, minVal) - 3;
-    var maxVal = Math.max.apply(null, numbersInput);
+    var maxVal = Math.max.apply(null, inputNumbers);
     maxVal = Math.max(0, nextValue, maxVal) + 3;
-    // plotting the function
-    altGraph(graphContainer, predictionLatex, minVal, maxVal);
+    graphFunction(div_graphContainer, desmosGraphFunction, minVal, maxVal);
 }
-
-document.getElementById('inputForm').addEventListener('submit', function(event) {
-    handleSubmit(event);
-});
-
 
 function formatLatex(func) {
     var latex_str = func.latex;
@@ -237,6 +247,32 @@ function formatLatexShort(func) {
     });
 
     return latex_str;
+}
+
+function buildDisplayedFunction(funcs, coeffs) {
+    // displayed function
+    let displayedFunction = "\\begin{align} f(x) &= ";
+    
+    const maxlength = Math.ceil(Math.floor(window.innerWidth / 250) / 1.5);
+    let length = 1;
+    console.log(window.innerWidth);
+    console.log(maxlength);
+    funcs.forEach((func, index) => {
+        console.log(length);
+        if (coeffs[index] == 0) { return; }
+        if (length >= maxlength && index != 0) {
+            displayedFunction += "\\\\ &";
+            length = 0;
+        }
+        if (index != 0) {
+            displayedFunction += (coeffs[index] >= 0) ? " + " : " - ";
+        }
+        let coeff = (Math.sign(coeffs[index]) * coeffs[index]).toFixed(2);
+        displayedFunction += `${coeff} \\cdot ${formatLatexShort(func)}`;
+        length++;
+    });
+    displayedFunction += "\\end{align}";
+    return displayedFunction;
 }
 
 function convertScientificToLatex(scientificStr) {
@@ -264,8 +300,7 @@ function calculate(funcs, coeff, x) {
     return result;
 }
 
-
-function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
+function graphFunction(destination, latex_str, minVal, maxVal, num_points=10) {
     destination.innerHTML = "";
     // initiallize calculator
     const options = {
@@ -309,3 +344,8 @@ function altGraph(destination, latex_str, minVal, maxVal, num_points=10) {
         top: maxVal
     });
 }
+
+
+
+
+

@@ -21,7 +21,7 @@ body {
 }
 
 
-#plot {
+#graphContainer {
     height: 70vh;
     display: inline-block;
 }
